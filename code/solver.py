@@ -2,6 +2,7 @@ import torch
 import torch.optim as optim
 from torchvision.utils import save_image
 import os
+import numpy as np
 
 from model import Generator, Discriminator, weights_init_normal
 
@@ -98,7 +99,7 @@ class Solver:
         fixed_source_images, fixed_target_images = fixed_source_images.to(self.device), fixed_target_images.to(self.device)
 
         # Train 200 epoches
-        for epoch in range(self.start_epoch, 200):
+        for epoch in range(self.start_epoch, 20):
             # Save Images for debugging
             with torch.no_grad():
                 self.generator = self.generator.eval()
@@ -150,3 +151,24 @@ class Solver:
 
             # Save model
             self._save_model(epoch)
+    def inference(self, epoch_num=2, pre_num=16):
+        self._restore_model(epoch_num)
+        fixed_source_images, fixed_target_images = next(iter(self.loaders.train_loader))
+        fixed_source_images, fixed_target_images = fixed_source_images.type(torch.FloatTensor), fixed_target_images.type(torch.FloatTensor)
+        # ones = torch.ones_like(self.discriminator(fixed_source_images, fixed_source_images))
+        # zeros = torch.zeros_like(self.discriminator(fixed_source_images, fixed_source_images))
+        # for ii in range(16/self.config.batch_size-1):
+        for ii in range(pre_num-1):
+            fixed_source_images_, fixed_target_images_ = next(iter(self.loaders.train_loader))
+            fixed_source_images = torch.cat([fixed_source_images, fixed_source_images_], dim=0)
+            fixed_target_images = torch.cat([fixed_target_images, fixed_target_images_], dim=0)
+        fixed_source_images, fixed_target_images = fixed_source_images.to(self.device), fixed_target_images.to(self.device)
+
+        # Train 200 epoches
+        # for epoch in range(self.start_epoch, 20):
+            # Save Images for debugging
+        with torch.no_grad():
+            self.generator.eval()
+            fake_images = self.generator(fixed_source_images)
+        # print(fake_images.shape)
+        np.save(os.path.join(self.save_images_path, 'result_{}.npy'.format(epoch_num)),fake_images.cpu().numpy())

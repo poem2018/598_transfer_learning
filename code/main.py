@@ -30,6 +30,21 @@ def main(config):
     solver = Solver(config, loaders)
     solver.train()
 
+def inference(config):
+
+    # Environments Parameters
+    os.environ['CUDA_VISIBLE_DEVICES'] = config.cuda
+    if not os.path.exists(config.output_path,):
+        os.makedirs(os.path.join(config.output_path, 'images/'))
+        os.makedirs(os.path.join(config.output_path, 'models/'))
+
+    # Initialize Dataset
+    loaders = Loaders(config)
+
+    # Initialize Pixel2Pixel and train
+    solver = Solver(config, loaders)
+    solver.inference(2,16) 
+
 
 if __name__ == '__main__':
 
